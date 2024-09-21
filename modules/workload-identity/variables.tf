@@ -137,3 +137,17 @@ variable "gcp_sa_description" {
     error_message = "The Google service account description must be at most 256 characters"
   }
 }
+
+# ref: https://medium.com/google-cloud/solving-the-workload-identity-sameness-with-iam-conditions-c02eba2b0c13
+# ref: https://www.googlecloudcommunity.com/gc/Google-Kubernetes-Engine-GKE/Blogpost-Solving-the-Workload-Identity-sameness-with-IAM/m-p/180956
+#
+# For regional clusters use `gcloud container clusters list --region europe-west4 --format="value(selfLink)"`
+# e.g.
+#   https://container.googleapis.com/v1/projects/PROJECT_X/locations/europe-west4/clusters/iaas-pipelines-dev
+#   https://container.googleapis.com/v1/projects/PROJECT_X/locations/europe-west4/clusters/iaas-security-dev
+#
+variable "gcp_sa_limit_clusters" {
+  description = "Limit impersonantion of gSA by specific clusters"
+  type        = list(string)
+  default     = []
+}

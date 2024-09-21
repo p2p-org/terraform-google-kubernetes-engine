@@ -30,6 +30,7 @@ locals {
   k8s_sa_gcp_derived_name = "serviceAccount:${local.k8s_sa_project_id}.svc.id.goog[${var.namespace}/${local.output_k8s_name}]"
 
   sa_binding_additional_project = distinct(flatten([for project, roles in var.additional_projects : [for role in roles : { project_id = project, role_name = role }]]))
+  gsa_condition                 = join(" || ", formatlist("request.auth.claims.google.providerId=='%s'", var.gcp_sa_limit_clusters))
 }
 
 data "google_service_account" "cluster_service_account" {
@@ -83,6 +84,10 @@ resource "google_service_account_iam_member" "main" {
   service_account_id = var.use_existing_gcp_sa ? data.google_service_account.cluster_service_account[0].name : google_service_account.cluster_service_account[0].name
   role               = "roles/iam.workloadIdentityUser"
   member             = local.k8s_sa_gcp_derived_name
+  condition {
+    title      = "allow-specific-gke-clusters"
+    expression = local.gsa_condition
+  }
 }
 
 resource "google_project_iam_member" "workload_identity_sa_bindings" {
