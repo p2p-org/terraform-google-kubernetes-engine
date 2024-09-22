@@ -84,9 +84,13 @@ resource "google_service_account_iam_member" "main" {
   service_account_id = var.use_existing_gcp_sa ? data.google_service_account.cluster_service_account[0].name : google_service_account.cluster_service_account[0].name
   role               = "roles/iam.workloadIdentityUser"
   member             = local.k8s_sa_gcp_derived_name
-  condition {
-    title      = "allow-specific-gke-clusters"
-    expression = local.gsa_condition
+
+  dynamic "condition" {
+    for_each = length(var.gcp_sa_limit_clusters) > 0 ? toset([local.gsa_condition]) : to_set([])
+    content {
+      title      = "allow-specific-gke-clusters"
+      expression = condition.value
+    }
   }
 }
 
